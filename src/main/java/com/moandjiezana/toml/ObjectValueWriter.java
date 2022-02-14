@@ -5,69 +5,66 @@ import static com.moandjiezana.toml.MapValueWriter.MAP_VALUE_WRITER;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 class ObjectValueWriter implements ValueWriter {
-  static final ValueWriter OBJECT_VALUE_WRITER = new ObjectValueWriter();
+    static final ValueWriter OBJECT_VALUE_WRITER = new ObjectValueWriter();
 
-  @Override
-  public boolean canWrite(Object value) {
-    return true;
-  }
-
-  @Override
-  public void write(Object value, WriterContext context) {
-    Map<String, Object> to = new LinkedHashMap<String, Object>();
-    Set<Field> fields = getFields(value.getClass());
-    for (Field field : fields) {
-      to.put(field.getName(), getFieldValue(field, value));
+    @Override
+    public boolean canWrite(Object value) {
+        return true;
     }
 
-    MAP_VALUE_WRITER.write(to, context);
-  }
+    @Override
+    public void write(Object value, WriterContext context) {
+        final Map<String, Object> to = new LinkedHashMap<>();
+        final Set<Field> fields = getFields(value.getClass());
+        for (Field field : fields) {
+            to.put(field.getName(), getFieldValue(field, value));
+        }
 
-  @Override
-  public boolean isPrimitiveType() {
-    return false;
-  }
-
-  private static Set<Field> getFields(Class<?> cls) {
-    Set<Field> fields = new LinkedHashSet<Field>(Arrays.asList(cls.getDeclaredFields()));
-    while (cls != Object.class) {
-      fields.addAll(Arrays.asList(cls.getDeclaredFields()));
-      cls = cls.getSuperclass();
+        MAP_VALUE_WRITER.write(to, context);
     }
-    removeConstantsAndSyntheticFields(fields);
 
-    return fields;
-  }
-
-  private static void removeConstantsAndSyntheticFields(Set<Field> fields) {
-    Iterator<Field> iterator = fields.iterator();
-    while (iterator.hasNext()) {
-      Field field = iterator.next();
-      if ((Modifier.isFinal(field.getModifiers()) && Modifier.isStatic(field.getModifiers())) || field.isSynthetic() || Modifier.isTransient(field.getModifiers())) {
-        iterator.remove();
-      }
+    @Override
+    public boolean isPrimitiveType() {
+        return false;
     }
-  }
 
-  private static Object getFieldValue(Field field, Object o) {
-    boolean isAccessible = field.isAccessible();
-    field.setAccessible(true);
-    Object value = null;
-    try {
-      value = field.get(o);
-    } catch (IllegalAccessException ignored) {
+    private static Set<Field> getFields(Class<?> cls) {
+        final Set<Field> fields = new LinkedHashSet<>(Arrays.asList(cls.getDeclaredFields()));
+        while (cls != Object.class) {
+            fields.addAll(Arrays.asList(cls.getDeclaredFields()));
+            cls = cls.getSuperclass();
+        }
+        removeConstantsAndSyntheticFields(fields);
+
+        return fields;
     }
-    field.setAccessible(isAccessible);
 
-    return value;
-  }
+    private static void removeConstantsAndSyntheticFields(Set<Field> fields) {
+        fields.removeIf(
+            field -> (Modifier.isFinal(field.getModifiers()) && Modifier.isStatic(field.getModifiers())) || field.isSynthetic() || Modifier.isTransient(
+                field.getModifiers()));
+    }
 
-  private ObjectValueWriter() {}
+    @SuppressWarnings("deprecation")
+    private static Object getFieldValue(Field field, Object o) {
+        final boolean isAccessible = field.isAccessible();
+        field.setAccessible(true);
+        Object value = null;
+        try {
+            value = field.get(o);
+        } catch (IllegalAccessException ignored) {
+        }
+        field.setAccessible(isAccessible);
+
+        return value;
+    }
+
+    private ObjectValueWriter() {
+    }
 }

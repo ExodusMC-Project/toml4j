@@ -5,141 +5,141 @@ import java.io.Writer;
 import java.util.Arrays;
 
 class WriterContext {
-  private String arrayKey = null;
-  private boolean isArrayOfTable = false;
-  private boolean empty = true;
-  private final String key;
-  private final String currentTableIndent;
-  private final String currentFieldIndent;
-  private final Writer output;
-  private final IndentationPolicy indentationPolicy;
-  private final DatePolicy datePolicy;
+    private String arrayKey = null;
+    private boolean isArrayOfTable = false;
+    private boolean empty = true;
+    private final String key;
+    private final String currentTableIndent;
+    private final String currentFieldIndent;
+    private final Writer output;
+    private final IndentationPolicy indentationPolicy;
+    private final DatePolicy datePolicy;
 
-  WriterContext(IndentationPolicy indentationPolicy, DatePolicy datePolicy, Writer output) {
-    this("", "", output, indentationPolicy, datePolicy);
-  }
-
-  WriterContext pushTable(String newKey) {
-    String newIndent = "";
-    if (!key.isEmpty()) {
-      newIndent = growIndent(indentationPolicy);
+    WriterContext(IndentationPolicy indentationPolicy, DatePolicy datePolicy, Writer output) {
+        this("", "", output, indentationPolicy, datePolicy);
     }
 
-    String fullKey = key.isEmpty() ? newKey : key + "." + newKey;
+    WriterContext pushTable(String newKey) {
+        String newIndent = "";
+        if (!this.key.isEmpty()) {
+            newIndent = this.growIndent(this.indentationPolicy);
+        }
 
-    WriterContext subContext = new WriterContext(fullKey, newIndent, output, indentationPolicy, datePolicy);
-    if (!empty) {
-      subContext.empty = false;
-    }
-    
-    return subContext;
-  }
+        final String fullKey = this.key.isEmpty() ? newKey : this.key + "." + newKey;
 
-  WriterContext pushTableFromArray() {
-    WriterContext subContext = new WriterContext(key, currentTableIndent, output, indentationPolicy, datePolicy);
-    if (!empty) {
-      subContext.empty = false;
-    }
-    subContext.setIsArrayOfTable(true);
+        final WriterContext subContext = new WriterContext(fullKey, newIndent, this.output, this.indentationPolicy, this.datePolicy);
+        if (!this.empty) {
+            subContext.empty = false;
+        }
 
-    return subContext;
-  }
-  
-  WriterContext write(String s) {
-    try {
-      output.write(s);
-      if (empty && !s.isEmpty()) {
-        empty = false;
-      }
-      
-      return this;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  void write(char[] chars) {
-    for (char c : chars) {
-      write(c);
-    }
-  }
-  
-  WriterContext write(char c) {
-    try {
-      output.write(c);
-      empty = false;
-      
-      return this;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  void writeKey() {
-    if (key.isEmpty()) {
-      return;
+        return subContext;
     }
 
-    if (!empty) {
-      write('\n');
+    WriterContext pushTableFromArray() {
+        final WriterContext subContext = new WriterContext(this.key, this.currentTableIndent, this.output, this.indentationPolicy, this.datePolicy);
+        if (!this.empty) {
+            subContext.empty = false;
+        }
+        subContext.setIsArrayOfTable(true);
+
+        return subContext;
     }
 
-    write(currentTableIndent);
+    WriterContext write(String s) {
+        try {
+            this.output.write(s);
+            if (this.empty && !s.isEmpty()) {
+                this.empty = false;
+            }
 
-    if (isArrayOfTable) {
-      write("[[").write(key).write("]]\n");
-    } else {
-      write('[').write(key).write("]\n");
+            return this;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
-  }
 
-  void writeArrayDelimiterPadding() {
-    for (int i = 0; i < indentationPolicy.getArrayDelimiterPadding(); i++) {
-      write(' ');
+    void write(char[] chars) {
+        for (char c : chars) {
+            this.write(c);
+        }
     }
-  }
 
-  void indent() {
-    if (!key.isEmpty()) {
-      write(currentFieldIndent);
+    WriterContext write(char c) {
+        try {
+            this.output.write(c);
+            this.empty = false;
+
+            return this;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
-  }
-  
-  DatePolicy getDatePolicy() {
-    return datePolicy;
-  }
 
-  WriterContext setIsArrayOfTable(boolean isArrayOfTable) {
-    this.isArrayOfTable = isArrayOfTable;
-    return this;
-  }
+    void writeKey() {
+        if (this.key.isEmpty()) {
+            return;
+        }
 
-  WriterContext setArrayKey(String arrayKey) {
-    this.arrayKey = arrayKey;
-    return this;
-  }
+        if (!this.empty) {
+            this.write('\n');
+        }
 
-  String getContextPath() {
-    return key.isEmpty() ? arrayKey : key + "." + arrayKey;
-  }
+        this.write(this.currentTableIndent);
 
-  private String growIndent(IndentationPolicy indentationPolicy) {
-    return currentTableIndent + fillStringWithSpaces(indentationPolicy.getTableIndent());
-  }
+        if (this.isArrayOfTable) {
+            this.write("[[").write(this.key).write("]]\n");
+        } else {
+            this.write('[').write(this.key).write("]\n");
+        }
+    }
 
-  private String fillStringWithSpaces(int count) {
-    char[] chars = new char[count];
-    Arrays.fill(chars, ' ');
+    void writeArrayDelimiterPadding() {
+        for (int i = 0; i < this.indentationPolicy.getArrayDelimiterPadding(); i++) {
+            this.write(' ');
+        }
+    }
 
-    return new String(chars);
-  }
+    void indent() {
+        if (!this.key.isEmpty()) {
+            this.write(this.currentFieldIndent);
+        }
+    }
 
-  private WriterContext(String key, String tableIndent, Writer output, IndentationPolicy indentationPolicy, DatePolicy datePolicy) {
-    this.key = key;
-    this.output = output;
-    this.indentationPolicy = indentationPolicy;
-    this.currentTableIndent = tableIndent;
-    this.datePolicy = datePolicy;
-    this.currentFieldIndent = tableIndent + fillStringWithSpaces(this.indentationPolicy.getKeyValueIndent());
-  }
+    DatePolicy getDatePolicy() {
+        return this.datePolicy;
+    }
+
+    WriterContext setIsArrayOfTable(boolean isArrayOfTable) {
+        this.isArrayOfTable = isArrayOfTable;
+        return this;
+    }
+
+    WriterContext setArrayKey(String arrayKey) {
+        this.arrayKey = arrayKey;
+        return this;
+    }
+
+    String getContextPath() {
+        return this.key.isEmpty() ? this.arrayKey : this.key + "." + this.arrayKey;
+    }
+
+    private String growIndent(IndentationPolicy indentationPolicy) {
+        return this.currentTableIndent + this.fillStringWithSpaces(indentationPolicy.getTableIndent());
+    }
+
+    private String fillStringWithSpaces(int count) {
+        final char[] chars = new char[count];
+        Arrays.fill(chars, ' ');
+
+        return new String(chars);
+    }
+
+    private WriterContext(String key, String tableIndent, Writer output, IndentationPolicy indentationPolicy, DatePolicy datePolicy) {
+        this.key = key;
+        this.output = output;
+        this.indentationPolicy = indentationPolicy;
+        this.currentTableIndent = tableIndent;
+        this.datePolicy = datePolicy;
+        this.currentFieldIndent = tableIndent + this.fillStringWithSpaces(this.indentationPolicy.getKeyValueIndent());
+    }
 }
