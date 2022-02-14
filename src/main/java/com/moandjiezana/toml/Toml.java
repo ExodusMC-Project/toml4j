@@ -38,7 +38,11 @@ import java.util.Set;
  */
 public class Toml {
 
-    private static final Gson DEFAULT_GSON = new Gson();
+    private static Gson DEFAULT_GSON = new Gson();
+
+    public static void init(Gson gson) {
+        DEFAULT_GSON = gson;
+    }
 
     private Map<String, Object> values;
     private final Toml defaults;
