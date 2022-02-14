@@ -5,16 +5,16 @@ import java.util.Map;
 
 public class FruitArray {
 
-  public static class Fruit {
-    public String name;
-    public Physical physical;
-    public List<Map<String, String>> variety;
-  }
+    public static class Fruit {
+        public String name;
+        public Physical physical;
+        public List<Map<String, String>> variety;
+    }
 
-  public static class Physical {
-    public String color;
-    public String shape;
-  }
+    public static class Physical {
+        public String color;
+        public String shape;
+    }
 
-  public List<Fruit> fruit;
+    public List<Fruit> fruit;
 }
