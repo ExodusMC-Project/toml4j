@@ -10,6 +10,7 @@ class StringValueReaderWriter implements ValueReader, ValueWriter {
 
     static final StringValueReaderWriter STRING_VALUE_READER_WRITER = new StringValueReaderWriter();
     private static final Pattern UNICODE_REGEX = Pattern.compile("\\\\[uU](.{4})");
+    private static final String NEWLINE_SEPERATOR = System.getProperty("line.separator");
 
     private static final String[] specialCharacterEscapes = new String[93];
 
@@ -98,9 +99,17 @@ class StringValueReaderWriter implements ValueReader, ValueWriter {
 
     @Override
     public void write(Object value, WriterContext context) {
-        context.write('"');
-        this.escapeUnicode(value.toString(), context);
-        context.write('"');
+        final String literal = value.toString();
+
+        if (literal.contains(NEWLINE_SEPERATOR)) {
+            context.write("'''" + NEWLINE_SEPERATOR);
+            this.escapeUnicodeMultiLine(value.toString(), context);
+            context.write("'''");
+        } else {
+            context.write("\"");
+            this.escapeUnicode(value.toString(), context);
+            context.write("\"");
+        }
     }
 
     @Override
@@ -116,6 +125,23 @@ class StringValueReaderWriter implements ValueReader, ValueWriter {
             } else {
                 context.write(in.charAt(i));
             }
+        }
+    }
+
+    private void escapeUnicodeMultiLine(String in, WriterContext context) {
+        final String[] lines = in.split(NEWLINE_SEPERATOR);
+
+        for (final String line : lines) {
+            for (int i = 0; i < line.length(); i++) {
+                final int codePoint = line.codePointAt(i);
+                if (codePoint < specialCharacterEscapes.length && specialCharacterEscapes[codePoint] != null) {
+                    context.write(specialCharacterEscapes[codePoint]);
+                } else {
+                    context.write(line.charAt(i));
+                }
+            }
+
+            context.write(NEWLINE_SEPERATOR);
         }
     }
 
